@@ -2,6 +2,9 @@ package set;
 
 import bst.BST;
 
+/**
+ * 基于二分搜索树实现的集合
+ */
 public class BSTSet<E extends Comparable<E>> implements Set<E> {
 
     private BST<E> bst;
