@@ -3,14 +3,19 @@ package map;
 public class Main {
     
     public static void main(String[] args) {
-        Map<Integer, String> map = new LinkedListMap<Integer, String>();
-        map.put(1, "aaa");
-        map.put(2, "bbb");
-        map.put(1, "ccc");
-        System.out.println(map.get(1));
+//        Map<Integer, String> map = new LinkedListMap<Integer, String>();
+        Map<Integer, String> map = new BSTMap<Integer, String>();
+        map.put(5, "5");
+        map.put(3, "3");
+        map.put(6, "6");
+        map.put(2, "2");
+        map.put(4, "4");
+        map.put(8, "8");
+        map.put(6, "6");
         System.out.println("size: " + map.size());
-        map.remove(1);
-        System.out.println(map.get(1));
+        System.out.println(map.get(3));
+        map.remove(3);
         System.out.println("size: " + map.size());
+        System.out.println(map.get(3));
     }
 }

@@ -75,6 +75,7 @@ public class BST<E extends Comparable<E>> {
      * 
      * @param root  二分搜索树的根
      * @param e     待添加元素
+     * @return      返回添加元素后的二分搜索树的根节点
      */
     private Node addNode(Node root, E e) {
         // 根为空，则不继续递归寻找 e 的插入位置
