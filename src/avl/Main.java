@@ -21,7 +21,7 @@ public class Main {
         System.out.println("isBST: " + map.isBST());
         System.out.println("isBalance: " + map.isBalance()); // 如果在添加时不进行平衡处理，则为 false
         
-        map.remove(5);
+        System.out.println("remove: " + map.remove(5));
         System.out.println("isBST: " + map.isBST());
         System.out.println("isBalance: " + map.isBalance()); // 如果在删除时不进行平衡处理，则为 false
 
