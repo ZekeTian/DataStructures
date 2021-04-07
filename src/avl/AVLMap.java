@@ -3,10 +3,10 @@ package avl;
 import map.Map;
 
 public class AVLMap<K extends Comparable<K>, V> implements Map<K, V> {
-    private AVLMap<K, V> map;
+    private AVLTree<K, V> map;
     
     public AVLMap() {
-        map = new AVLMap<K, V>();
+        map = new AVLTree<K, V>();
     }
 
     @Override

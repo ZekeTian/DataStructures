@@ -9,6 +9,10 @@ public class AVLSet<E extends Comparable<E>> implements Set<E> {
      */
     private AVLMap<E, Object> map;
     
+    public AVLSet() {
+        map = new AVLMap<E, Object>();
+    }
+    
     @Override
     public void add(E e) {
         map.put(e, null);
