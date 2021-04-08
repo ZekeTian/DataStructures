@@ -1,5 +1,8 @@
 package rbtree;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import map.Map;
 
 /**
@@ -58,6 +61,7 @@ public class RBTree<K extends Comparable<K>, V> implements Map<K, V> {
             return null;
         }
         
+        // 树中存在 key 对应的节点，则执行删除操作
         root = remove(root, key);
         
         return node.val;
@@ -83,6 +87,24 @@ public class RBTree<K extends Comparable<K>, V> implements Map<K, V> {
         return size;
     }
 
+    /**
+     * 验证是否是二分搜索树。如果是，则返回 true；否则，返回 false。
+     * @return 如果树是二分搜索树，则返回 true；否则，返回 false。
+     */
+    public boolean isBST() {
+        List<K> sortedList = new ArrayList<K>();
+        
+        inOrder(root, sortedList);
+        
+        for (int i = 1; i < sortedList.size(); ++i) {
+            if (sortedList.get(i - 1).compareTo(sortedList.get(i)) > 0) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
     /**
      * 在以  root 为根顶点的树中，获取键值为 key 的节点。
      * @param root  根顶点
@@ -128,7 +150,43 @@ public class RBTree<K extends Comparable<K>, V> implements Map<K, V> {
     }
     
     /**
-     * 在以 root 为根顶点的树中，删除 key 对应的节点
+     * 在以 root 为根顶点的树中，取出最小节点
+     * @param root 根顶点
+     * @return 树中最小的节点
+     */
+    private Node getMinNode(Node root) {
+        if (null == root || null == root.left) {
+            return root;
+        }
+        
+        return getMinNode(root.left);
+    }
+    
+    /**
+     * 在以 root 为根顶点的树中，删除最小节点，并返回新树的根顶点。
+     * @param root 根顶点
+     * @return 删除最小顶点后，新树的根顶点
+     */
+    private Node removeMinNode(Node root) {
+        if (null == root) {
+            return null;
+        }
+        
+        if (null == root.left) { // 最小节点
+            --size;
+            Node ret = root.right;
+            root.right = null;
+            return ret;
+        }
+        
+        root.left = removeMinNode(root.left);
+        
+        return root;
+    }
+    
+    
+    /**
+     * 在以 root 为根顶点的树中，删除 key 对应的节点。（调用此函数，必须确保树中存在 key）
      * @param root 根顶点
      * @param key  待删除顶点的键值
      * @return     删除顶点后，新树的根顶点
@@ -138,6 +196,43 @@ public class RBTree<K extends Comparable<K>, V> implements Map<K, V> {
             return null;
         }
         
-        return null;
+        if (key.compareTo(root.key) < 0) {
+            root.left = remove(root.left, key);
+        } else if (key.compareTo(root.key) > 0) {
+            root.right = remove(root.right, key);
+        } else { // key == root.key
+            if (null == root.left) {
+                Node ret = root.right;
+                root.right = null;
+                --size;
+                return ret;
+            }
+            
+            if (null == root.right) {
+                Node ret = root.left;
+                root.left = null;
+                --size;
+                return ret;
+            }
+            
+            // 左右子树均不为空，则从右子树中取出最小顶点来代替 root
+            Node minNode = getMinNode(root.right);
+            minNode.right = removeMinNode(root.right);
+            minNode.left = root.left;
+            root.left = root.right = null;
+            return minNode;
+        }
+        
+        return root;
+    }
+    
+    private void inOrder(Node root, List<K> result) {
+        if (null == root) {
+            return;
+        }
+        
+        inOrder(root.left, result);
+        result.add(root.key);
+        inOrder(root.right, result);
     }
 }
