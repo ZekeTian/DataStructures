@@ -11,6 +11,30 @@ import map.Map;
  * 但是，需要注意的是：红黑树与 2-3 树是等价的，但不等于。
  * 以 AVL 树中的平衡定义来衡量 AVL 树、2-3 树、红黑树，则三者平衡性的大小关系如下：
  *      2-3 树（绝对平衡） > AVL 树（平衡） > 红黑树（近似平衡）
+ *      
+ * 红黑树的性质：
+ *  （1）每个节点是红色或者是黑色
+ *  （2）根节点是黑色的
+ *  （3）每一个叶子节点（最后的空节点）是黑色的
+ *  （4）如果一个节点是红色的，那么他的孩子节点都是黑色的
+ *      对于一个孩子节点而言，其要么是 2-3 树中的  2 节点，要么是 2-3 树中的 3 节点。
+ *      如果是 2 节点，则其就是黑色；如果是 3 节点，对其进行拆分，红节点是左节点，黑节点是根节点（因为根节点与父节点相连，所以相对于父节点而言，孩子节点还是黑色）
+ *      注意：如果一个节点是黑色的，那么他的右节点都是黑色的（原因同上）
+ *  （5）从任意一个节点到叶子节点，经过的黑色节点的个数是一样的（经过红色节点的个数不一定一样）
+ *      在 2-3 树中，由于其绝对平衡的特点，任意一个节点到叶子节点的高度是一样的。
+ *      而由于 2-3 树与红黑树等价，任意一个节点到叶子节点的高度等于该节点到叶子节点所经过的黑节点个数，即有：从任意一个节点到叶子节点，经过的黑色节点是一样的。
+ *      
+ *   注意：
+ *   （1）红黑树是一种近似平衡的树。
+ *      正因为于此，所以若只是查找，则其性能比 AVL 树差；但是若考虑添加、删除、更新、查找四种操作，其综合性能要比 AVL 树好。
+ *      因为 AVL 树在添加、删除时的自平衡操作要比红黑树的操作更繁琐、更耗时。
+ *   （2）若 2-3 树的高度是 O(logn)，则最坏情况下，红黑树的高度是 2 * O(logn)。
+ *      在最坏情况下，2-3 树的一条路径上的所有节点全部是 3 节点。当转换成红黑树，需要将这些 3 节点全部转换成 2 节点，高度变成原来的两倍。
+ *      
+ *   二分搜索树、AVL 树、红黑树的性能总结：
+ *   （1）二分搜索树：对于完全随机的数据，其性能不差。但是在极端情况下，会退化成链表（即插入的元素完全有序）或高度不平衡（即插入的元素基本有序）
+ *   （2）AVL 树：查找性能较好，但是自平衡操作较复杂，耗时略多
+ *   （3）红黑树：是一种近似平衡的树，牺牲了一定的平衡性，高度从 logn 变成 2*logn，查找性能比 AVL 树差，但是统计性能更优（综合增删改查操作）
  */
 public class RBTree<K extends Comparable<K>, V> implements Map<K, V> {
 
@@ -32,7 +56,8 @@ public class RBTree<K extends Comparable<K>, V> implements Map<K, V> {
             this.val = val;
             left = null;
             right = null;
-            color = RED;
+            color = RED; // 由于 2-3 树添加操作的限制，新添加的节点不能添加到空节点的位置上，因此新添加的节点都是和已有节点融合。
+                                                                    // 而在红黑树中，与其他节点融合的节点是红色的，因此新节点默认颜色为红色。
         }
     }
 
@@ -52,6 +77,7 @@ public class RBTree<K extends Comparable<K>, V> implements Map<K, V> {
     @Override
     public void put(K key, V value) {
         root = put(root, key, value);
+        root.color = BLACK; // 保持根节点始终是黑色
     }
 
     @Override
@@ -234,5 +260,18 @@ public class RBTree<K extends Comparable<K>, V> implements Map<K, V> {
         inOrder(root.left, result);
         result.add(root.key);
         inOrder(root.right, result);
+    }
+    
+    /**
+     * 判断节点 node 是否为红色。
+     * @param node
+     * @return 如果节点是红色，返回 true；否则，返回 false。
+     */
+    private boolean isRed(Node node) {
+        if (null == node) {
+            return false;
+        }
+        
+        return node.color == RED;
     }
 }
