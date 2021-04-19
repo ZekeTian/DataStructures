@@ -1,6 +1,7 @@
 package rbtree;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import map.Map;
@@ -19,7 +20,7 @@ import map.Map;
  *  （4）如果一个节点是红色的，那么他的孩子节点都是黑色的
  *      对于一个孩子节点而言，其要么是 2-3 树中的  2 节点，要么是 2-3 树中的 3 节点。
  *      如果是 2 节点，则其就是黑色；如果是 3 节点，对其进行拆分，红节点是左节点，黑节点是根节点（因为根节点与父节点相连，所以相对于父节点而言，孩子节点还是黑色）
- *      注意：如果一个节点是黑色的，那么他的右节点都是黑色的（原因同上）
+ *      注意：对于左倾红黑树而言，如果一个节点是黑色的，那么他的右子节点是黑色的（原因同上）
  *  （5）从任意一个节点到叶子节点，经过的黑色节点的个数是一样的（经过红色节点的个数不一定一样）
  *      在 2-3 树中，由于其绝对平衡的特点，任意一个节点到叶子节点的高度是一样的。
  *      而由于 2-3 树与红黑树等价，任意一个节点到叶子节点的高度等于该节点到叶子节点所经过的黑节点个数，即有：从任意一个节点到叶子节点，经过的黑色节点是一样的。
@@ -131,6 +132,64 @@ public class RBTree<K extends Comparable<K>, V> implements Map<K, V> {
         return true;
     }
     
+    
+    private class NodeInfo {
+        NodeInfo parent;
+        Node left;
+        Node right;
+        boolean color;
+        K key;
+        
+        public NodeInfo(NodeInfo parent, Node cur) {
+            this.parent = parent;
+            this.left = cur.left;
+            
+            this.right = cur.right;
+            this.color = cur.color;
+            this.key = cur.key;
+        }
+        
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            
+            if (null == parent) {
+                builder.append("根顶点: ")
+                       .append(key + " - " + getColorInfo(color));
+            } else {
+                builder.append("parent: " + parent.key + ", ")
+                       .append("node: " + key + " - " + getColorInfo(color));
+            }
+            
+            
+            return builder.toString();
+        }
+    }
+    
+    /**
+     * 按照层序，打印红黑树
+     */
+    public void print() {
+        LinkedList<NodeInfo> queue =  new LinkedList<NodeInfo>();
+        
+        queue.add(new NodeInfo(null, root));
+        
+        while (!queue.isEmpty()) {
+            NodeInfo node = queue.poll();
+            
+            System.out.println(node);
+            
+            if (null != node.left) {
+                queue.add(new NodeInfo(node, node.left));
+            }
+            if (null != node.right) {
+                queue.add(new NodeInfo(node, node.right));
+            }
+        }
+    }
+    
+    
+    
     /**
      * 在以  root 为根顶点的树中，获取键值为 key 的节点。
      * @param root  根顶点
@@ -170,6 +229,19 @@ public class RBTree<K extends Comparable<K>, V> implements Map<K, V> {
             root.right = put(root.right, key, val);
         } else { // key == root.key
             root.val = val;
+        }
+        
+        // 添加节点后，根据树的形状及节点颜色，进行相应操作
+        if (isRed(root.right) && !isRed(root.left)) {
+            root = leftRotate(root);
+        }
+        
+        if (isRed(root.left) && isRed(root.left.left)) {
+            root = rightRotate(root);
+        }
+        
+        if (isRed(root.left) && isRed(root.right)) {
+            flipColor(root);
         }
         
         return root;
@@ -262,6 +334,10 @@ public class RBTree<K extends Comparable<K>, V> implements Map<K, V> {
         inOrder(root.right, result);
     }
     
+    private String getColorInfo(boolean color) {
+        return RED == color ? "red" : "black"; 
+    }
+    
     /**
      * 判断节点 node 是否为红色。
      * @param node
@@ -269,9 +345,72 @@ public class RBTree<K extends Comparable<K>, V> implements Map<K, V> {
      */
     private boolean isRed(Node node) {
         if (null == node) {
-            return false;
+            return false; // 空节点为黑色
         }
         
         return node.color == RED;
+    }
+    
+    /**
+     *          node                         x
+     *          /  \        左旋转                                /  \ 
+     *         T1   x    ========>       node  T3 
+     *             / \                   /  \  
+     *            T2 T3                 T1  T2
+     * 
+     * 将以 node 为根顶点的树进行左旋转，并返回旋转后树的根顶点
+     * @param node 根顶点
+     * @return 旋转后树的根顶点
+     */
+    private Node leftRotate(Node node) {
+        // 左旋转
+        Node x = node.right;
+        node.right = x.left;
+        x.left = node;
+        
+        // 变换根顶点颜色
+        x.color = node.color;
+        node.color = RED;
+        
+        return x;
+    }
+    
+    /**
+     *          node                         x
+     *          /  \        右旋转                                 / \
+     *         x   T2     ========>        y  node 
+     *        / \                             /  \
+     *       y  T1                           T1  T2
+     * 
+     * 将以 node 为根顶点的树进行右旋转，并返回旋转后树的根顶点
+     * @param node 根顶点
+     * @return 旋转后树的根顶点
+     */
+    private Node rightRotate(Node node) {
+        // 右旋转
+        Node x = node.left;
+        node.left = x.right;
+        x.right = node;
+        
+        // 变换根顶点颜色
+        x.color = node.color;
+        node.color = RED;
+        
+        return x;
+    }
+    
+    /**
+     *              node(黑色)                       node(红色)
+     *              /   \            颜色翻转                          /   \
+     *           L(红色)  R(红色)    ==========>   L(黑色) R(黑色)
+     *             
+     * 将以 node 为根顶点的树进行颜色翻转
+     * @param node 根顶点
+     * @return 颜色翻转后树的根顶点
+     */
+    private void flipColor(Node node) {
+        node.color = RED;
+        node.left.color = BLACK;
+        node.right.color = BLACK;
     }
 }
