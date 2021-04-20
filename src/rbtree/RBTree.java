@@ -58,7 +58,7 @@ public class RBTree<K extends Comparable<K>, V> implements Map<K, V> {
             left = null;
             right = null;
             color = RED; // 由于 2-3 树添加操作的限制，新添加的节点不能添加到空节点的位置上，因此新添加的节点都是和已有节点融合。
-                                                                    // 而在红黑树中，与其他节点融合的节点是红色的，因此新节点默认颜色为红色。
+                         // 而在红黑树中，与其他节点融合的节点是红色的，因此新节点默认颜色为红色。
         }
     }
 
@@ -353,7 +353,7 @@ public class RBTree<K extends Comparable<K>, V> implements Map<K, V> {
     
     /**
      *          node                         x
-     *          /  \        左旋转                                /  \ 
+     *          /  \        左旋转           /  \ 
      *         T1   x    ========>       node  T3 
      *             / \                   /  \  
      *            T2 T3                 T1  T2
@@ -377,7 +377,7 @@ public class RBTree<K extends Comparable<K>, V> implements Map<K, V> {
     
     /**
      *          node                         x
-     *          /  \        右旋转                                 / \
+     *          /  \        右旋转            / \
      *         x   T2     ========>        y  node 
      *        / \                             /  \
      *       y  T1                           T1  T2
@@ -401,7 +401,7 @@ public class RBTree<K extends Comparable<K>, V> implements Map<K, V> {
     
     /**
      *              node(黑色)                       node(红色)
-     *              /   \            颜色翻转                          /   \
+     *              /   \            颜色翻转         /   \
      *           L(红色)  R(红色)    ==========>   L(黑色) R(黑色)
      *             
      * 将以 node 为根顶点的树进行颜色翻转

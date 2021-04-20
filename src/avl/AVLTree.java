@@ -176,7 +176,7 @@ public class AVLTree<K extends Comparable<K>, V> implements Map<K, V> {
      *            y                       x
      *           / \                     /  \
      *          x  T4                   Z    y
-     *         / \      y 右旋转                         / \  / \ 
+     *         / \      y 右旋转         / \  / \ 
      *        Z  T3    =======>       T1 T2 T3 T4
      *       / \
      *      T1 T2  
@@ -201,7 +201,7 @@ public class AVLTree<K extends Comparable<K>, V> implements Map<K, V> {
      *            y                        x
      *           / \                      /  \
      *          T1  x                    y    z
-     *             / \      y 左旋转                 / \  / \
+     *             / \      y 左旋转      / \  / \
      *            T2 z      =======>   T1 T2 T3 T4
      *              / \
      *             T3 T4
