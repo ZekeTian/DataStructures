@@ -1,13 +1,23 @@
 package hashtable;
 
-import java.util.Map.Entry;
-import java.util.Set;
+import java.util.LinkedList;
 import java.util.TreeMap;
 
 /**
- * 链地址法解决哈希冲突，底层使用 TreeMap ，要求 key 必须是可比的。
+ * 链地址法解决哈希冲突，底层使用 LinkedList ，对 key 无特殊要求。
  */
-public class TreeHashTable<K extends Comparable<K>, V> implements HashTable<K, V> {
+public class LinkedHashTable<K, V> implements HashTable<K, V> {
+
+    private class Node {
+        K key;
+        V val;
+
+        public Node(K key, V val) {
+            this.key = key;
+            this.val = val;
+        }
+    }
+
     /**
      * 哈希表容量
      */
@@ -28,7 +38,7 @@ public class TreeHashTable<K extends Comparable<K>, V> implements HashTable<K, V
     /**
      * 存储数据
      */
-    private TreeMap<K, V>[] hashtable;
+    private LinkedList<Node>[] hashtable;
 
     /**
      * 哈希表大小
@@ -45,28 +55,29 @@ public class TreeHashTable<K extends Comparable<K>, V> implements HashTable<K, V
      */
     private int capacityIndex;
 
-    public TreeHashTable() {
+    public LinkedHashTable() {
         size = 0;
         capacityIndex = 0;
         capacity = CAPACITY_ARR[capacityIndex];
-        hashtable = new TreeMap[capacity];
+        hashtable = new LinkedList[capacity];
 
         for (int i = 0; i < capacity; ++i) {
-            hashtable[i] = new TreeMap<K, V>();
+            hashtable[i] = new LinkedList<Node>();
         }
     }
 
     @Override
     public void put(K key, V val) {
-        if (contains(key)) {
-            hashtable[hash(key)].put(key, val);
-            return; // 只是更新值，则 size 不发生变化
+        Node node = getNode(key);
+        if (null != node) { // 已经存在 key，则直接更新该值即可
+            node.val = val;
+            return;
         }
-        
-        hashtable[hash(key)].put(key, val); // 添加新值
+
+        // 不存在 key，则添加新值
+        hashtable[hash(key)].add(new Node(key, val));
         ++size;
 
-        // 判断当前元素是否过多，若过多，则进行 resize 扩容
         if (size >= UPPER * capacity && capacityIndex + 1 < CAPACITY_ARR.length) {
             System.out.println("before resize(put), capacity is: " + capacity + ", size: " + size);
             resize(CAPACITY_ARR[++capacityIndex]);
@@ -76,26 +87,32 @@ public class TreeHashTable<K extends Comparable<K>, V> implements HashTable<K, V
 
     @Override
     public V get(K key) {
-        return hashtable[hash(key)].get(key);
+        Node node = getNode(key);
+        if (null == node) {
+            return null;
+        }
+
+        return node.val;
     }
 
     @Override
     public V remove(K key) {
-        TreeMap<K, V> map = hashtable[hash(key)];
-        if (!map.containsKey(key)) {
+        Node node = getNode(key);
+        if (null == node) { // 不包含 key 对应的元素，无需删除
             return null;
         }
-        
-        V val = map.remove(key);
+
+        // 删除 key 对应的元素
+        hashtable[hash(key)].remove(node);
         --size;
-        
+
         if (size <= LOWER * capacity && capacityIndex - 1 >= 0) {
             System.out.println("before resize(remove), capacity is: " + capacity + ", size: " + size);
             resize(CAPACITY_ARR[--capacityIndex]);
             System.out.println("after resize(remove), capacity is: " + capacity);
         }
-        
-        return val;
+
+        return node.val;
     }
 
     @Override
@@ -105,40 +122,51 @@ public class TreeHashTable<K extends Comparable<K>, V> implements HashTable<K, V
 
     @Override
     public boolean contains(K key) {
-        return hashtable[hash(key)].containsKey(key);
+        return null != getNode(key);
     }
-    
+
     @Override
     public boolean isEmpty() {
         return 0 == size;
     }
 
+    private int hash(K key) {
+        return (key.hashCode() & 0x7fffffff) % capacity;
+    }
+
     /**
-     * 获取 key 的哈希值，即获取存放 key 的哈希桶索引
+     * 获取 key 对应的节点。如果能获取到，则返回该节点；否则，返回 null。
      * 
      * @param key
-     * @return
+     * @return key 对应的节点。如果能获取到，则返回该节点；否则，返回 null。
      */
-    private int hash(K key) {
-        return (key.hashCode() & 0x7fffffff) % capacity; // key.hashCode 与 0x7fffffff 进行 & 操作，相当于是把 key.hashCode 的最高位变为 0 ，从而强制将其转换成正数（相当于取绝对值）
+    private Node getNode(K key) {
+        LinkedList<Node> list = hashtable[hash(key)];
+
+        for (Node e : list) {
+            if (e.key.equals(key)) {
+                return e;
+            }
+        }
+
+        return null;
     }
 
     private void resize(int newCapacity) {
         int oldCapacity = capacity;
-        capacity = newCapacity; // hash() 方法中需要对新容量进行取模，因此在此处需要更新 capacity
+        capacity = newCapacity;
 
-        // 扩容
-        TreeMap<K, V>[] newHashtable = new TreeMap[newCapacity];
+        LinkedList<Node>[] newHashtable = new LinkedList[newCapacity];
         for (int i = 0; i < newCapacity; ++i) {
-            newHashtable[i] = new TreeMap<K, V>();
+            newHashtable[i] = new LinkedList<Node>();
         }
 
-        // 将旧哈希表中的元素逐个放进新哈希表中
+        // 将旧哈希表中的元素复制到扩容后的哈希表中
         for (int i = 0; i < oldCapacity; ++i) {
-            TreeMap<K, V> map = hashtable[i];
-            Set<Entry<K, V>> entrySet = map.entrySet();
-            for (Entry<K, V> entry : entrySet) {
-                newHashtable[hash(entry.getKey())].put(entry.getKey(), entry.getValue());
+            LinkedList<Node> list = hashtable[i];
+
+            for (Node e : list) {
+                newHashtable[hash(e.key)].add(e);
             }
         }
 
