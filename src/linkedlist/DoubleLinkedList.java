@@ -1,5 +1,8 @@
 package linkedlist;
 
+/**
+ * 双向链表
+ */
 public class DoubleLinkedList<E> implements List<E> {
     
     private class Node {
