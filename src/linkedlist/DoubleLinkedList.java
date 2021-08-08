@@ -84,10 +84,21 @@ public class DoubleLinkedList<E> implements List<E> {
         Node preNode = node.pre;
         
         preNode.next = nextNode;
-        if (null != nextNode) {
+        if (null == nextNode) {
+           // 删除的是尾节点，尾节点向前移
+            tail = preNode;
+        } else {
+            // 删除的不是尾节点，则修改 nextNode 的前驱
             nextNode.pre = preNode;
         }
+        
         --size;
+        
+        // 链表已删空
+        if (isEmpty()) {
+            head.next = null;
+            tail = head;
+        }
         
         return node.val;
     }
